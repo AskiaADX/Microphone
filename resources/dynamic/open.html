@@ -1,0 +1,100 @@
+{% 
+Dim inputName  =  CurrentQuestion.InputName()
+Dim inputValue =  CurrentQuestion.InputValue()
+
+Dim datalist    = CurrentADC.PropValue("datalist").Split("|")     
+Dim attrList    = On(datalist.Count > 0, "list=\"" + inputName + "\"", "")
+Dim i
+
+
+Dim inputType  = CurrentADC.PropValue("opensubtype")
+Dim multiline  = (CurrentADC.PropValue("multiline") = "1") ' Convert to boolean
+
+Dim maxValue = CurrentQuestion.MaxValue
+Dim attrMax  = On(maxValue <> DK, "maxLength=\"" + maxValue + "\"", "")
+
+
+Dim attrRequired = On(CurrentQuestion.IsAllowDK, "required=\"required\"", "")
+
+Dim allowSaveFile = (CurrentADC.PropValue("allowSaveFile") = "1")
+
+Dim uploaderCaption = CurrentADC.PropValue("uploaderCaption")
+Dim dragdropCaption = CurrentADC.PropValue("dragdropCaption")
+
+Dim showControls = (CurrentADC.PropValue("showControls") = "1")
+Dim autoplay = (CurrentADC.PropValue("autoplay") = "1")
+Dim loop = (CurrentADC.PropValue("loop") = "1")
+ 
+Dim notIOS = (Browser.UserAgent.ToUpperCase().Split("IPAD").Count = 1) Or (Browser.UserAgent.ToUpperCase().Split("IPHONE").Count = 1)
+
+Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
+%}
+<script>
+    var uploadConfig_{%=CurrentADC.InstanceID%} = {
+        authenticationUrl : '{%=CurrentADC.PropValue("AusUrl")%}' + "/Authenticate",
+        uploadUrl : '{%=CurrentADC.PropValue("AusUrl")%}' + "/Upload",
+        apiKey : '{%=CurrentADC.PropValue("AusApiKey")%}',
+        secretKey : '{%=CurrentADC.PropValue("AusSecretKey")%}',
+        maxfilesize : parseInt('{%=CurrentADC.PropValue("AusMaxFileSize")%}', 10),
+        ausProjectName : '{%=CurrentADC.PropValue("AusProjectName")%}',
+        shortcut : '{%=CurrentQuestion.Shortcut%}',
+        seedvalue : '{%=Interview.Seed%}',
+        guidstring : '{%=Interview.GUID%}',
+        disabledUploadBtn : '{%= CurrentADC.PropValue("disableBtnUpload") %}',
+        allowUploadFileChange : '{%=CurrentADC.PropValue("allowUploadFileChange")%}',        
+        ErrMsgColor : '{%=CurrentADC.PropValue("error_message_color")%}',
+        ErrMsgFileSizeExceeded : '{%=CurrentADC.PropValue("file_size_exceed_error")%}',
+        ErrMsgInvalidApiSecretKeys : '{%=CurrentADC.PropValue("invalid_api_secret_error")%}',
+        ErrMsgErrorAtUpload : '{%=CurrentADC.PropValue("error_occured_at_upload_error")%}',
+        ErrMsgSelectFile : '{%=CurrentADC.PropValue("error_select_file_error")%}',
+        ErrMsgStopRec : '{%=CurrentADC.PropValue("stop_recording_error")%}',
+        ErrMsgStartRec : '{%=CurrentADC.PropValue("start_recording_error")%}',
+        ErrMsgUserMediaAccess : '{%=CurrentADC.PropValue("user_media_access_error")%}',
+        ErrMsgSave : '{%=CurrentADC.PropValue("save_error")%}',
+        ErrMsgToken : '{%=CurrentADC.PropValue("error_while_generating_token")%}',
+        SuccessMsgColor : '{%=CurrentADC.PropValue("success_message_color")%}',
+        SuccessMsgUpload : '{%=CurrentADC.PropValue("success_message_upload")%}',
+        SuccessMsgSave : '{%=CurrentADC.PropValue("success_message_save")%}',
+        EnabledNextAfterUpload : '{%=CurrentADC.PropValue("nextAfterUpload")%}',
+        AutoSubmitAfterUpload : '{%=CurrentADC.PropValue("autoSubmitUpload")%}'
+    };    
+    var audioRecorder;
+</script>
+{%if enabledNextAfterUpload then%}
+<script>
+    window.addEventListener('load', function () {
+        document.getElementsByName("Next")[0].hidden = true;
+    }, false);
+</script>
+{%EndIf%}
+
+<script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>    
+
+<div id="adc-errdiv_{%=CurrentADC.InstanceId%}">
+    <ul id="ulErrorMessages_{%=CurrentADC.InstanceID%}">
+    </ul>
+</div>
+<div id="adc-succdiv_{%=CurrentADC.InstanceId%}">
+    <span id="spanSuccessMessage_{%=CurrentADC.InstanceID%}"></span>
+</div>
+<div class="audio_{%=CurrentADC.InstanceId%}">
+<label for="btn-start-recording" id="label-start" class="btn primary">
+    <input type="button" id="btn-start-recording" onclick="startRecordingAudio({%=CurrentADC.InstanceId%});" hidden/>
+    {%=CurrentADC.PropValue("startBtnText")%}
+ </label>
+ <label for="btn-stop-recording" id="label-stop" class="btn">
+     <input type="button" id="btn-stop-recording" onclick="stopRecordingAudio({%=CurrentADC.InstanceId%});" disabled="disabled"  hidden/>
+     {%=CurrentADC.PropValue("stopBtnText")%}
+ </label>
+<br/>
+    <audio id="player" {% if showControls Then %}controls{% Endif %} {%if notIOS then%} {% if autoplay Then %}autoplay{% Endif %} {% if loop Then %}loop{% Endif %}{%EndIf%} controlsList="nodownload"></audio>
+</div>
+{%if allowSaveFile then%}
+<input type="button"  id="btnSave_{%=CurrentADC.InstanceId%}" class="btn" value="{%=CurrentADC.PropValue("btnSaveFileText")%}" onclick="saveAudio({%=CurrentADC.InstanceId%})"/>
+{%EndIf%}
+<input type="button" id="btnUpload_{%=CurrentADC.InstanceID%}" class="btn" value="{%=CurrentADC.PropValue("UploadButtonText")%}" onclick="uploadAudio({%=CurrentADC.InstanceID%});" />
+<input type="hidden" id="HidResult_{%=CurrentADC.InstanceID%}" name="{%= inputName %}" value="" {%:= attrMax %} {%:= attrRequired %}/>
+<div id="overlay_loader_{%=CurrentADC.InstanceID%}" class="loading hidden">Loading&#8230;</div>
+
+

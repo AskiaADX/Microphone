@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<control  xmlns="http://www.askia.com/2.0.0/ADCSchema"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.askia.com/2.0.0/ADCSchema https://raw.githubusercontent.com/AskiaADX/ADXSchema/2.0.0/ADCSchema.xsd"
+          version="2.0.0"
+          askiaCompat="5.3.3">
+  <info>
+    <name>Microphone</name>
+    <guid>d7c94a7c-10f9-4d31-8e51-82dc9c96c089</guid>
+    <version>1.0.0</version>
+    <date>2018-06-07</date>
+    <description><![CDATA[Audio capture via the microphone]]></description>
+    <company>Askia</company>
+    <author><![CDATA[Quentin Legrand <quentin@askia.com>]]></author>
+    <site>http://www.askia.com</site>
+    <helpURL></helpURL>
+    <categories>
+      <category>General</category>
+    </categories>
+    <style width="400" height="300" />
+    <constraints>
+      <constraint on="questions" single="false" multiple="false" numeric="false" date="false" open="true" chapter="false" requireParentLoop="false" />
+      <constraint on="controls" responseblock="false" checkbox="false" label="false" listbox="false" radiobutton="false" textbox="true" />
+      <constraint on="responses" max="*" min="*" />
+    </constraints>
+  </info>
+  <outputs defaultOutput="default">
+    <output id="default">
+      <description><![CDATA[Default output]]></description>
+      <content fileName="open.html" type="html" mode="dynamic" position="none" />
+      <content fileName="default.css" type="css" mode="static" position="head" />
+      <content fileName="default.html" type="html" mode="dynamic" position="placeholder" />
+      <content fileName="overlay.css" type="css" mode="static" position="head" />
+      <content fileName="default.css" type="css" mode="dynamic" position="head" />
+      <content fileName="adc_microphone.js" type="javascript" mode="static" position="head" />
+    </output>
+    <output id="fallback">
+      <description><![CDATA[Fallback for internet explorer]]></description>
+      <condition><![CDATA[(Browser.Name.ToUpperCase() = "INTERNET EXPLORER") Or (Browser.UserAgent.ToUpperCase().Split("TRIDENT").Count > 1) Or (Browser.UserAgent.ToUpperCase().Split("IPAD").Count > 1) ]]></condition>
+      <content fileName="default.css" type="css" mode="dynamic" position="head" />
+      <content fileName="adc_microphone.js" type="javascript" mode="static" position="head" />
+      <content fileName="default.css" type="css" mode="static" position="head" />
+      <content fileName="overlay.css" type="css" mode="static" position="head" />
+      <content fileName="default.css" type="css" mode="dynamic" position="none" />
+      <content fileName="fallback_open.html" type="html" mode="dynamic" position="none" />
+      <content fileName="fallback_default.html" type="html" mode="dynamic" position="placeholder" />
+    </output>
+    <output id="fallback_mobile">
+      <description><![CDATA[Fallback for mobiles and tablets]]></description>
+      <condition><![CDATA[(Browser.Mobile = 1) Or (Browser.UserAgent.ToUpperCase().Split("ANDROID").Count > 1)]]></condition>
+      <content fileName="default.css" type="css" mode="dynamic" position="head" />
+      <content fileName="adc_microphone.js" type="javascript" mode="static" position="head" />
+      <content fileName="default.css" type="css" mode="static" position="head" />
+      <content fileName="overlay.css" type="css" mode="static" position="head" />
+      <content fileName="open.html" type="html" mode="dynamic" position="none" />
+      <content fileName="default.html" type="html" mode="dynamic" position="placeholder" />
+    </output>
+  </outputs>
+  <properties>
+    <category id="AskiaUploadService" name="Askia Upload Service">
+      <property xsi:type="standardProperty" id="AusUrl" name="Url" type="string" mode="static" require="true" visible="true">
+        <description><![CDATA[AskiaUploaderService.svc url]]></description>
+        <value><![CDATA[http://staging.dev.p1central.com/FileUploadSwitcher/FileSwitcherService.svc]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="AusApiKey" name="API Key" type="string" mode="static" require="true" visible="true">
+        <description><![CDATA[Api key for AskiaUploadService]]></description>
+        <value><![CDATA[JKGRFTP3317]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="AusSecretKey" name="Secret Key" type="string" mode="static" require="true" visible="true">
+        <description><![CDATA[Secret key for AskiaUploadService]]></description>
+        <value><![CDATA[ARTQBVNJ24FJJW2331]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="UploadButtonText" name="Upload Button Text" type="string" mode="static" require="true" visible="true">
+        <description><![CDATA[Upload Button Text]]></description>
+        <value><![CDATA[Upload]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="AusProjectName" name="Project Name" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[AskiaProject]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="AusMaxFileSize" name="Maximum file size (KB)" type="number" require="true" visible="true" min="1" max="102400">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[2048]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="allowSaveFile" name="Allow save file" type="boolean" require="false" visible="true">
+        <description><![CDATA[Allowing the user to save the file ]]></description>
+        <value><![CDATA[false]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="disableBtnUpload" name="Disable upload button" type="boolean" require="false" visible="true">
+        <description><![CDATA[Disable upload button after first uploaded file.]]></description>
+        <value></value>
+      </property>
+      <property xsi:type="standardProperty" id="allowUploadFileChange" name="Allow upload on file change" type="boolean" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value></value>
+      </property>
+      <property xsi:type="standardProperty" id="btnSaveFileText" name="Save button text" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Save]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="nextAfterUpload" name="Next after upload" type="boolean" require="false" visible="true">
+        <description><![CDATA[Enabled Next button after upload]]></description>
+        <value><![CDATA[false]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="autoSubmitUpload" name="Auto submit after upload" type="boolean" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[false]]></value>
+      </property>
+    </category>
+    <category id="error_messages" name="Error Messages">
+      <property xsi:type="standardProperty" id="file_size_exceed_error" name="File Size Exceed Error" type="string" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[File Size Exceeded]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="invalid_api_secret_error" name="Invalid Api or Secret key Error" type="string" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Invalid api key or secret key.]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="error_occured_at_upload_error" name="Error occured at file upload. Please contact support" type="string" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Error occured at file upload]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="error_select_file_error" name="Please select a file" type="string" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Please select a file]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="error_while_generating_token" name="Error while generating token" type="string" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Error while generating token]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="stop_recording_error" name="Stop redording error" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Stop recording error]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="start_recording_error" name="Start recording error" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Cannot start video recording.]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="user_media_access_error" name="User media access" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Cannot access media devices.]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="save_error" name="Save error" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Cannot save file.]]></value>
+      </property>
+    </category>
+    <category id="SuccessMessage" name="Success message">
+      <property xsi:type="standardProperty" id="success_message_color" name="Success message color" type="color" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[0,170,0]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="success_message_upload" name="Success message on upload" type="string" mode="static" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[Upload successful]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="success_message_save" name="Success message on save" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[File saved successfully]]></value>
+      </property>
+    </category>
+    <category id="Style" name="Style">
+      <property xsi:type="standardProperty" id="controlWidth" name="Width" type="string" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[90%]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="controlAlign" name="Alignement" type="string" mode="dynamic" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value></value>
+        <options>
+          <option value="center" text="Center" />
+          <option value="left" text="Left" />
+          <option value="right" text="Right" />
+        </options>
+      </property>
+    </category>
+    <category id="Microphone" name="Microphone">
+      <property xsi:type="standardProperty" id="startBtnText" name="Start button text" type="string" require="false" visible="true">
+        <description><![CDATA[Text of the button to start recording]]></description>
+        <value><![CDATA[Start]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="stopBtnText" name="Stop button text" type="string" require="false" visible="true">
+        <description><![CDATA[Text of the button to stop recording]]></description>
+        <value><![CDATA[Stop]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="showControls" name="Show controls" type="boolean" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[false]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="autoplay" name="Autoplay" type="boolean" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[false]]></value>
+      </property>
+      <property xsi:type="standardProperty" id="loop" name="Loop" type="boolean" require="false" visible="true">
+        <description><![CDATA[]]></description>
+        <value><![CDATA[false]]></value>
+      </property>
+    </category>
+  </properties>
+</control>

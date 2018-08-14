@@ -1,0 +1,70 @@
+{% 
+Dim inputName  =  CurrentQuestion.InputName()
+Dim inputValue =  CurrentQuestion.InputValue()
+
+Dim datalist    = CurrentADC.PropValue("datalist").Split("|")     
+Dim attrList    = On(datalist.Count > 0, "list=\"" + inputName + "\"", "")
+Dim i
+
+
+Dim inputType  = CurrentADC.PropValue("opensubtype")
+Dim multiline  = (CurrentADC.PropValue("multiline") = "1") ' Convert to boolean
+
+Dim maxValue = CurrentQuestion.MaxValue
+Dim attrMax  = On(maxValue <> DK, "maxLength=\"" + maxValue + "\"", "")
+
+
+Dim attrRequired = On(CurrentQuestion.IsAllowDK, "required=\"required\"", "")
+
+Dim allowSaveFile = (CurrentADC.PropValue("allowSaveFile") = "1")
+
+Dim uploaderCaption = CurrentADC.PropValue("uploaderCaption")
+Dim dragdropCaption = CurrentADC.PropValue("dragdropCaption")
+
+Dim showControls = (CurrentADC.PropValue("showControls") = "1")
+Dim autoplay = (CurrentADC.PropValue("autoplay") = "1")
+Dim loop = (CurrentADC.PropValue("loop") = "1")
+ 
+%}
+<script>
+    var uploadConfig_{%=CurrentADC.InstanceID%} = {
+        authenticationUrl : '{%=CurrentADC.PropValue("AusUrl")%}' + "/Authenticate",
+        uploadUrl : '{%=CurrentADC.PropValue("AusUrl")%}' + "/Upload",
+        apiKey : '{%=CurrentADC.PropValue("AusApiKey")%}',
+        secretKey : '{%=CurrentADC.PropValue("AusSecretKey")%}',
+        maxfilesize : parseInt('{%=CurrentADC.PropValue("AusMaxFileSize")%}', 10),
+        ausProjectName : '{%=CurrentADC.PropValue("AusProjectName")%}',
+        shortcut : '{%=CurrentQuestion.Shortcut%}',
+        seedvalue : '{%=Interview.Seed%}',
+        guidstring : '{%=Interview.GUID%}',
+        disabledUploadBtn : '{%= CurrentADC.PropValue("disableBtnUpload") %}',
+        allowUploadFileChange : '{%=CurrentADC.PropValue("allowUploadFileChange")%}',        
+        ErrMsgColor : '{%=CurrentADC.PropValue("error_message_color")%}',
+        ErrMsgFileSizeExceeded : '{%=CurrentADC.PropValue("file_size_exceed_error")%}',
+        ErrMsgInvalidApiSecretKeys : '{%=CurrentADC.PropValue("invalid_api_secret_error")%}',
+        ErrMsgErrorAtUpload : '{%=CurrentADC.PropValue("error_occured_at_upload_error")%}',
+        ErrMsgSelectFile : '{%=CurrentADC.PropValue("error_select_file_error")%}',
+        ErrMsgStopRec : '{%=CurrentADC.PropValue("stop_recording_error")%}',
+        ErrMsgStartRec : '{%=CurrentADC.PropValue("start_recording_error")%}',
+        ErrMsgUserMediaAccess : '{%=CurrentADC.PropValue("user_media_access_error")%}',
+        ErrMsgSave : '{%=CurrentADC.PropValue("save_error")%}',
+        ErrMsgToken : '{%=CurrentADC.PropValue("error_while_generating_token")%}',
+        SuccessMsgColor : '{%=CurrentADC.PropValue("success_message_color")%}',
+        SuccessMsgUpload : '{%=CurrentADC.PropValue("success_message_upload")%}',
+        SuccessMsgSave : '{%=CurrentADC.PropValue("success_message_save")%}'
+    };    
+</script>
+<script>
+window.addEventListener("load", function () {
+        displayErrorMessage(uploadConfig({%=CurrentADC.InstanceId%}).ErrMsgUserMediaAccess, {%=CurrentADC.InstanceId%});
+        console.log("message pour utilisateur IE");
+}, false);
+</script>
+
+<div id="adc-errdiv_{%=CurrentADC.InstanceId%}">
+    <ul id="ulErrorMessages_{%=CurrentADC.InstanceID%}">
+    </ul>
+</div>
+<div id="overlay_loader_{%=CurrentADC.InstanceID%}" class="loading hidden">Loading&#8230;</div>
+
+
