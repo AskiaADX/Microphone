@@ -60,15 +60,15 @@
     <category id="AskiaUploadService" name="Askia Upload Service">
       <property xsi:type="standardProperty" id="AusUrl" name="Url" type="string" mode="static" require="true" visible="true">
         <description><![CDATA[AskiaUploaderService.svc url]]></description>
-        <value><![CDATA[http://staging.dev.p1central.com/FileUploadSwitcher/FileSwitcherService.svc]]></value>
+        <value></value>
       </property>
       <property xsi:type="standardProperty" id="AusApiKey" name="API Key" type="string" mode="static" require="true" visible="true">
         <description><![CDATA[Api key for AskiaUploadService]]></description>
-        <value><![CDATA[JKGRFTP3317]]></value>
+        <value></value>
       </property>
       <property xsi:type="standardProperty" id="AusSecretKey" name="Secret Key" type="string" mode="static" require="true" visible="true">
         <description><![CDATA[Secret key for AskiaUploadService]]></description>
-        <value><![CDATA[ARTQBVNJ24FJJW2331]]></value>
+        <value></value>
       </property>
       <property xsi:type="standardProperty" id="UploadButtonText" name="Upload Button Text" type="string" mode="static" require="true" visible="true">
         <description><![CDATA[Upload Button Text]]></description>
