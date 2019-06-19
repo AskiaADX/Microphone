@@ -1,8 +1,8 @@
-{% 
+{%
 Dim inputName  =  CurrentQuestion.InputName()
 Dim inputValue =  CurrentQuestion.InputValue()
 
-Dim datalist    = CurrentADC.PropValue("datalist").Split("|")     
+Dim datalist    = CurrentADC.PropValue("datalist").Split("|")
 Dim attrList    = On(datalist.Count > 0, "list=\"" + inputName + "\"", "")
 Dim i
 
@@ -24,7 +24,7 @@ Dim dragdropCaption = CurrentADC.PropValue("dragdropCaption")
 Dim showControls = (CurrentADC.PropValue("showControls") = "1")
 Dim autoplay = (CurrentADC.PropValue("autoplay") = "1")
 Dim loop = (CurrentADC.PropValue("loop") = "1")
- 
+
 Dim notIOS = (Browser.UserAgent.ToUpperCase().Split("IPAD").Count = 1) Or (Browser.UserAgent.ToUpperCase().Split("IPHONE").Count = 1)
 
 Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
@@ -41,7 +41,7 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
         seedvalue : '{%=Interview.Seed%}',
         guidstring : '{%=Interview.GUID%}',
         disabledUploadBtn : '{%= CurrentADC.PropValue("disableBtnUpload") %}',
-        allowUploadFileChange : '{%=CurrentADC.PropValue("allowUploadFileChange")%}',        
+        allowUploadFileChange : '{%=CurrentADC.PropValue("allowUploadFileChange")%}',
         ErrMsgColor : '{%=CurrentADC.PropValue("error_message_color")%}',
         ErrMsgFileSizeExceeded : '{%=CurrentADC.PropValue("file_size_exceed_error")%}',
         ErrMsgInvalidApiSecretKeys : '{%=CurrentADC.PropValue("invalid_api_secret_error")%}',
@@ -57,7 +57,7 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
         SuccessMsgSave : '{%=CurrentADC.PropValue("success_message_save")%}',
         EnabledNextAfterUpload : '{%=CurrentADC.PropValue("nextAfterUpload")%}',
         AutoSubmitAfterUpload : '{%=CurrentADC.PropValue("autoSubmitUpload")%}'
-    };    
+    };
     var audioRecorder;
 </script>
 {%if enabledNextAfterUpload then%}
@@ -68,8 +68,8 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
 </script>
 {%EndIf%}
 
-<script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
-<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>    
+<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 
 <div id="adc-errdiv_{%=CurrentADC.InstanceId%}">
     <ul id="ulErrorMessages_{%=CurrentADC.InstanceID%}">
@@ -96,5 +96,3 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
 <input type="button" id="btnUpload_{%=CurrentADC.InstanceID%}" class="btn" value="{%=CurrentADC.PropValue("UploadButtonText")%}" onclick="uploadAudio({%=CurrentADC.InstanceID%});" />
 <input type="hidden" id="HidResult_{%=CurrentADC.InstanceID%}" name="{%= inputName %}" value="" {%:= attrMax %} {%:= attrRequired %}/>
 <div id="overlay_loader_{%=CurrentADC.InstanceID%}" class="loading hidden">Loading&#8230;</div>
-
-
