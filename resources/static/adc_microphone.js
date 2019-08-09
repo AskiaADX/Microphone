@@ -21,10 +21,7 @@ function uploadAudio(instanceId){
 
     if(audioRecorder != undefined){ // if audio has been recorded
         var audioBlob;
-        audioRecorder.getBlob().then(function(blob) {
-          audioBlob = blob;
-        });
-
+        audioBlob = audioRecorder.blob;
         if(validFileSize(instanceId, audioBlob)){
             generateNewToken(function(token){
                 uploadConfig(instanceId).token=token;
@@ -373,12 +370,9 @@ function stopRecordingAudio(instanceId) {
     var player = document.getElementById('player');
     audioRecorder.stopRecording().then(function() {
         console.info('stopRecording success');
-        // var audioBlob = audioRecorder.getBlob();
-        // player.src = URL.createObjectURL(audioBlob);
 
-        audioRecorder.getBlob().then(function(blob) { // Now RecordRTCPromisesHandler function returns a promise with a blob as the promise value.
-            player.src = URL.createObjectURL(blob);
-        });
+        // Now RecordRTCPromisesHandler function returns a promise with a blob as the promise value.
+        player.src = URL.createObjectURL(audioRecorder.blob);
 
         if (!navigator.userAgent.toUpperCase().includes("IPAD")) {
             player.play();
@@ -403,9 +397,7 @@ function saveAudio(instanceId) {
     if (!hasClass(player, "saved")) {
         if(audioRecorder != undefined){ // if audio has been recorded
             if (window.navigator.msSaveOrOpenBlob) { // Edge
-                audioRecorder.getBlob().then(function(blob) {
-                  window.navigator.msSaveOrOpenBlob(blob, "my_audio.mpeg");
-                });
+               window.navigator.msSaveOrOpenBlob(audioRecorder.blob, "my_audio.mpeg");
             } else { // Others
                 var a = document.createElement("a");
                 a.href = player.src;

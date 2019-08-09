@@ -7,7 +7,7 @@
   <info>
     <name>Microphone</name>
     <guid>d7c94a7c-10f9-4d31-8e51-82dc9c96c089</guid>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <date>2018-06-07</date>
     <description><![CDATA[Audio capture via the microphone
       v1.0.1 - change the `stopRecordingAudio` func code to get the promise instead of a blob]]></description>
@@ -34,6 +34,8 @@
       <content fileName="overlay.css" type="css" mode="static" position="head" />
       <content fileName="default.css" type="css" mode="dynamic" position="head" />
       <content fileName="adc_microphone.js" type="javascript" mode="static" position="head" />
+      <content fileName="RecordRTC.js" type="javascript" mode="static" position="head" />
+      <content fileName="adapter-latest.js" type="javascript" mode="static" position="head" />
     </output>
     <output id="fallback">
       <description><![CDATA[Fallback for internet explorer]]></description>
