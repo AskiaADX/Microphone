@@ -356,8 +356,11 @@ function startRecordingAudio(instanceId) {
     removeClass(document.getElementById("label-start"), "primary");
     addClass(document.getElementById("label-stop"), "primary");
     removeClass(player, "saved");
-    getElementByDynamicId("btnSave",instanceId).disabled = false;
-}
+    var btnSave = getElementByDynamicId("btnSave",instanceId);
+    if(btnSave){
+        btnSave.disabled = false;
+    }
+  }
 
 /*
 * Stop the audio recording, diplays the recorded audio on screen and stores the audio in audioRecorder variable

@@ -7,10 +7,12 @@
   <info>
     <name>Microphone</name>
     <guid>d7c94a7c-10f9-4d31-8e51-82dc9c96c089</guid>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <date>2018-06-07</date>
     <description><![CDATA[Audio capture via the microphone
-      v1.0.1 - change the `stopRecordingAudio` func code to get the promise instead of a blob]]></description>
+      v1.0.1 - change the `stopRecordingAudio` func code to get the promise instead of a blob
+	  v1.0.2 -
+	  v1.0.3 - ]]></description>
     <company>Askia</company>
     <author><![CDATA[Quentin Legrand <quentin@askia.com>]]></author>
     <site>http://www.askia.com</site>
