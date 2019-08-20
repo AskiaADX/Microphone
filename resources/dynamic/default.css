@@ -29,6 +29,11 @@ Dim backgroundColorDragDrop = CurrentADC.PropValue("backgroundColorDragDrop")
     {% EndIf %}
 }
 
+{% if CurrentADC.PropValue("showControls") = "0" Then %}
+#adc_{%= CurrentADC.InstanceId %} > .btn {
+    margin-top: 2em !important;
+}
+{% endif %}
 
 #adc_{%= CurrentADC.InstanceId %} #player {
     padding-top: 10%;
