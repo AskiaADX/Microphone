@@ -1,17 +1,9 @@
 {%
-
-Dim typeOfCapture = CurrentADC.PropValue("typeOfCapture")
-
 Dim fontFamily = Theme.FontFamily
 Dim borderWidth = Theme.BorderWidth
 
 Dim controlWidth = CurrentADC.PropValue("controlWidth")
 Dim controlAlign = CurrentADC.PropValue("controlAlign")
-
-Dim paddingTopBottomDD = CurrentADC.PropValue("paddingTopBottomDD")
-Dim backgroundColorDragDrop = CurrentADC.PropValue("backgroundColorDragDrop")
-
-
 %}
 
 #adc_{%= CurrentADC.InstanceId %}.adc-default {
@@ -38,13 +30,9 @@ Dim backgroundColorDragDrop = CurrentADC.PropValue("backgroundColorDragDrop")
 #adc_{%= CurrentADC.InstanceId %} #player {
     padding-top: 10%;
     padding-bottom: 5%;
-}    
+}
 
 #adc_{%= CurrentADC.InstanceId %} label {
     padding-left: 20px;
     padding-right: 20px;
 }
-
-
-
-

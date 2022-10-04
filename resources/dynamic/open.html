@@ -2,24 +2,12 @@
 Dim inputName  =  CurrentQuestion.InputName()
 Dim inputValue =  CurrentQuestion.InputValue()
 
-Dim datalist    = CurrentADC.PropValue("datalist").Split("|")
-Dim attrList    = On(datalist.Count > 0, "list=\"" + inputName + "\"", "")
-Dim i
-
-
-Dim inputType  = CurrentADC.PropValue("opensubtype")
-Dim multiline  = (CurrentADC.PropValue("multiline") = "1") ' Convert to boolean
-
 Dim maxValue = CurrentQuestion.MaxValue
 Dim attrMax  = On(maxValue <> DK, "maxLength=\"" + maxValue + "\"", "")
-
 
 Dim attrRequired = On(CurrentQuestion.IsAllowDK, "required=\"required\"", "")
 
 Dim allowSaveFile = (CurrentADC.PropValue("allowSaveFile") = "1")
-
-Dim uploaderCaption = CurrentADC.PropValue("uploaderCaption")
-Dim dragdropCaption = CurrentADC.PropValue("dragdropCaption")
 
 Dim showControls = (CurrentADC.PropValue("showControls") = "1")
 Dim autoplay = (CurrentADC.PropValue("autoplay") = "1")
@@ -42,7 +30,6 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
         guidstring : '{%=Interview.GUID%}',
         disabledUploadBtn : '{%= CurrentADC.PropValue("disableBtnUpload") %}',
         allowUploadFileChange : '{%=CurrentADC.PropValue("allowUploadFileChange")%}',
-        ErrMsgColor : '{%=CurrentADC.PropValue("error_message_color")%}',
         ErrMsgFileSizeExceeded : '{%=CurrentADC.PropValue("file_size_exceed_error")%}',
         ErrMsgInvalidApiSecretKeys : '{%=CurrentADC.PropValue("invalid_api_secret_error")%}',
         ErrMsgErrorAtUpload : '{%=CurrentADC.PropValue("error_occured_at_upload_error")%}',
