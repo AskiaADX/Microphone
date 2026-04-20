@@ -140,7 +140,7 @@
       </property>
       <property xsi:type="standardProperty" id="start_recording_error" name="Start recording error" type="string" require="false" visible="true">
         <description><![CDATA[]]></description>
-        <value><![CDATA[Cannot start video recording.]]></value>
+        <value><![CDATA[Cannot start recording.]]></value>
       </property>
       <property xsi:type="standardProperty" id="user_media_access_error" name="User media access" type="string" require="false" visible="true">
         <description><![CDATA[]]></description>
