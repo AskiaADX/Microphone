@@ -504,19 +504,25 @@ function startRecordingAudio(instanceId) {
     }).then(function() {
         console.info("Recording audio ...");
         stopBtn.disabled = false;
-    }).catch(function(error) {
-        console.error("Cannot start audio recording: ", error);
+        }).catch(function(error) {
+            var debugMsg = "START FAILED\n";
 
-        if (audioRecorder && audioRecorder.stream) {
-            stopStreamTracks(audioRecorder.stream);
-        }
+            debugMsg += "Error: " + (error && error.message ? error.message : error) + "\n";
 
-        audioRecorder = undefined;
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+            debugMsg += "MediaRecorder: " + (typeof MediaRecorder !== "undefined") + "\n";
 
-        displayErrorMessage(uploadConfig(instanceId).ErrMsgStartRec || uploadConfig(instanceId).ErrMsgUserMediaAccess, instanceId);
-    });
+            if (typeof MediaRecorder !== "undefined") {
+                debugMsg += "webm: " + MediaRecorder.isTypeSupported("audio/webm;codecs=opus") + "\n";
+                debugMsg += "webm(no codec): " + MediaRecorder.isTypeSupported("audio/webm") + "\n";
+                debugMsg += "mp4: " + MediaRecorder.isTypeSupported("audio/mp4") + "\n";
+                debugMsg += "ogg: " + MediaRecorder.isTypeSupported("audio/ogg") + "\n";
+            }
+
+            // SHOW IT DIRECTLY IN THE UI
+            displayErrorMessage(debugMsg, instanceId);
+
+            console.error("Cannot start audio recording:", error);
+        });
 
     removeClass(player, "saved");
 
