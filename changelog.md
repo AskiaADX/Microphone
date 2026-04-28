@@ -8,3 +8,4 @@ Audio capture via the microphone
       v2.0.2 - changed .catch() error message to a more robust feedback instead of "cannot record"
       v2.0.3 - updated WebRTC lib
       v2.0.4 - updated missing libraries in config.xml for mobile browser fallback
+      v2.0.5 - changed to button type instead of input type, changed to addeventhandler instead of onclick listeners 

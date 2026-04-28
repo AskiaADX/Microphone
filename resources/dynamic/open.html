@@ -52,14 +52,20 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
 
 {%if enabledNextAfterUpload then%}
 <script>
-    window.addEventListener('load', function () {
-        document.getElementsByName("Next")[0].hidden = true;
+    window.addEventListener("load", function () {
+        var nextButton = document.getElementsByName("Next")[0];
+
+        if (nextButton) {
+            nextButton.hidden = true;
+        }
     }, false);
 </script>
 {%EndIf%}
 
-<!-- <script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
-<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+<!-- 
+<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> 
+-->
 
 <div id="adc-errdiv_{%=CurrentADC.InstanceId%}">
     <ul id="ulErrorMessages_{%=CurrentADC.InstanceID%}"></ul>
@@ -70,20 +76,20 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
 </div>
 
 <div class="audio_{%=CurrentADC.InstanceId%}">
-    <input
+    <button
         type="button"
         id="btn-start-recording_{%=CurrentADC.InstanceId%}"
-        class="btn primary"
-        value="{%=CurrentADC.PropValue("startBtnText")%}"
-        onclick="startRecordingAudio({%=CurrentADC.InstanceId%});" />
+        class="btn primary">
+        {%=CurrentADC.PropValue("startBtnText")%}
+    </button>
 
-    <input
+    <button
         type="button"
         id="btn-stop-recording_{%=CurrentADC.InstanceId%}"
         class="btn"
-        value="{%=CurrentADC.PropValue("stopBtnText")%}"
-        onclick="stopRecordingAudio({%=CurrentADC.InstanceId%});"
-        disabled="disabled" />
+        disabled="disabled">
+        {%=CurrentADC.PropValue("stopBtnText")%}
+    </button>
 
     <br/>
 
@@ -98,20 +104,20 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
 </div>
 
 {%if allowSaveFile then%}
-<input
+<button
     type="button"
     id="btnSave_{%=CurrentADC.InstanceId%}"
-    class="btn"
-    value="{%=CurrentADC.PropValue("btnSaveFileText")%}"
-    onclick="saveAudio({%=CurrentADC.InstanceId%})"/>
+    class="btn">
+    {%=CurrentADC.PropValue("btnSaveFileText")%}
+</button>
 {%EndIf%}
 
-<input
+<button
     type="button"
     id="btnUpload_{%=CurrentADC.InstanceID%}"
-    class="btn"
-    value="{%=CurrentADC.PropValue("UploadButtonText")%}"
-    onclick="uploadAudio({%=CurrentADC.InstanceID%});" />
+    class="btn">
+    {%=CurrentADC.PropValue("UploadButtonText")%}
+</button>
 
 <input
     type="hidden"
@@ -122,3 +128,54 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
     {%:= attrRequired %}/>
 
 <div id="overlay_loader_{%=CurrentADC.InstanceID%}" class="loading hidden">Loading&#8230;</div>
+
+<script>
+    (function () {
+        var instanceId = "{%=CurrentADC.InstanceID%}";
+
+        function bindAudioControlEvents() {
+            var btnStart = document.getElementById("btn-start-recording_" + instanceId);
+            var btnStop = document.getElementById("btn-stop-recording_" + instanceId);
+            var btnSave = document.getElementById("btnSave_" + instanceId);
+            var btnUpload = document.getElementById("btnUpload_" + instanceId);
+
+            if (btnStart && !btnStart.dataset.audioEventBound) {
+                btnStart.addEventListener("click", function () {
+                    startRecordingAudio(instanceId);
+                });
+
+                btnStart.dataset.audioEventBound = "true";
+            }
+
+            if (btnStop && !btnStop.dataset.audioEventBound) {
+                btnStop.addEventListener("click", function () {
+                    stopRecordingAudio(instanceId);
+                });
+
+                btnStop.dataset.audioEventBound = "true";
+            }
+
+            if (btnSave && !btnSave.dataset.audioEventBound) {
+                btnSave.addEventListener("click", function () {
+                    saveAudio(instanceId);
+                });
+
+                btnSave.dataset.audioEventBound = "true";
+            }
+
+            if (btnUpload && !btnUpload.dataset.audioEventBound) {
+                btnUpload.addEventListener("click", function () {
+                    uploadAudio(instanceId);
+                });
+
+                btnUpload.dataset.audioEventBound = "true";
+            }
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", bindAudioControlEvents);
+        } else {
+            bindAudioControlEvents();
+        }
+    })();
+</script>
