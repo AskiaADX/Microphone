@@ -17,6 +17,7 @@ Dim notIOS = (Browser.UserAgent.ToUpperCase().Split("IPAD").Count = 1) Or (Brows
 
 Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
 %}
+
 <script>
     var uploadConfig_{%=CurrentADC.InstanceID%} = {
         authenticationUrl : '{%=CurrentADC.PropValue("AusUrl")%}' + "/Authenticate",
@@ -45,41 +46,136 @@ Dim enabledNextAfterUpload = (CurrentADC.PropValue("nextAfterUpload") = "1")
         EnabledNextAfterUpload : '{%=CurrentADC.PropValue("nextAfterUpload")%}',
         AutoSubmitAfterUpload : '{%=CurrentADC.PropValue("autoSubmitUpload")%}'
     };
+
     var audioRecorder;
 </script>
+
 {%if enabledNextAfterUpload then%}
 <script>
-    window.addEventListener('load', function () {
-        document.getElementsByName("Next")[0].hidden = true;
+    window.addEventListener("load", function () {
+        var nextButton = document.getElementsByName("Next")[0];
+
+        if (nextButton) {
+            nextButton.hidden = true;
+        }
     }, false);
 </script>
 {%EndIf%}
 
-<!-- <script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
-<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+<!-- 
+<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> 
+-->
 
 <div id="adc-errdiv_{%=CurrentADC.InstanceId%}">
-    <ul id="ulErrorMessages_{%=CurrentADC.InstanceID%}">
-    </ul>
+    <ul id="ulErrorMessages_{%=CurrentADC.InstanceID%}"></ul>
 </div>
+
 <div id="adc-succdiv_{%=CurrentADC.InstanceId%}">
     <span id="spanSuccessMessage_{%=CurrentADC.InstanceID%}"></span>
 </div>
+
 <div class="audio_{%=CurrentADC.InstanceId%}">
-<label for="btn-start-recording" id="label-start" class="btn primary">
-    <input type="button" id="btn-start-recording" onclick="startRecordingAudio({%=CurrentADC.InstanceId%});" hidden/>
-    {%=CurrentADC.PropValue("startBtnText")%}
- </label>
- <label for="btn-stop-recording" id="label-stop" class="btn">
-     <input type="button" id="btn-stop-recording" onclick="stopRecordingAudio({%=CurrentADC.InstanceId%});" disabled="disabled"  hidden/>
-     {%=CurrentADC.PropValue("stopBtnText")%}
- </label>
-<br/>
-    <audio id="player" {% if showControls Then %}controls{% Endif %} {%if notIOS then%} {% if autoplay Then %}autoplay{% Endif %} {% if loop Then %}loop{% Endif %}{%EndIf%} controlsList="nodownload"></audio>
+    <button
+        type="button"
+        id="btn-start-recording_{%=CurrentADC.InstanceId%}"
+        class="btn primary">
+        {%=CurrentADC.PropValue("startBtnText")%}
+    </button>
+
+    <button
+        type="button"
+        id="btn-stop-recording_{%=CurrentADC.InstanceId%}"
+        class="btn"
+        disabled="disabled">
+        {%=CurrentADC.PropValue("stopBtnText")%}
+    </button>
+
+    <br/>
+
+    <audio
+        id="player_{%=CurrentADC.InstanceId%}"
+        {% if showControls Then %}controls{% Endif %}
+        {%if notIOS then%}
+            {% if autoplay Then %}autoplay{% Endif %}
+            {% if loop Then %}loop{% Endif %}
+        {%EndIf%}
+        controlsList="nodownload"></audio>
 </div>
+
 {%if allowSaveFile then%}
-<input type="button"  id="btnSave_{%=CurrentADC.InstanceId%}" class="btn" value="{%=CurrentADC.PropValue("btnSaveFileText")%}" onclick="saveAudio({%=CurrentADC.InstanceId%})"/>
+<button
+    type="button"
+    id="btnSave_{%=CurrentADC.InstanceId%}"
+    class="btn">
+    {%=CurrentADC.PropValue("btnSaveFileText")%}
+</button>
 {%EndIf%}
-<input type="button" id="btnUpload_{%=CurrentADC.InstanceID%}" class="btn" value="{%=CurrentADC.PropValue("UploadButtonText")%}" onclick="uploadAudio({%=CurrentADC.InstanceID%});" />
-<input type="hidden" id="HidResult_{%=CurrentADC.InstanceID%}" name="{%= inputName %}" value="" {%:= attrMax %} {%:= attrRequired %}/>
+
+<button
+    type="button"
+    id="btnUpload_{%=CurrentADC.InstanceID%}"
+    class="btn">
+    {%=CurrentADC.PropValue("UploadButtonText")%}
+</button>
+
+<input
+    type="hidden"
+    id="HidResult_{%=CurrentADC.InstanceID%}"
+    name="{%= inputName %}"
+    value=""
+    {%:= attrMax %}
+    {%:= attrRequired %}/>
+
 <div id="overlay_loader_{%=CurrentADC.InstanceID%}" class="loading hidden">Loading&#8230;</div>
+
+<script>
+    (function () {
+        var instanceId = "{%=CurrentADC.InstanceID%}";
+
+        function bindAudioControlEvents() {
+            var btnStart = document.getElementById("btn-start-recording_" + instanceId);
+            var btnStop = document.getElementById("btn-stop-recording_" + instanceId);
+            var btnSave = document.getElementById("btnSave_" + instanceId);
+            var btnUpload = document.getElementById("btnUpload_" + instanceId);
+
+            if (btnStart && !btnStart.dataset.audioEventBound) {
+                btnStart.addEventListener("click", function () {
+                    startRecordingAudio(instanceId);
+                });
+
+                btnStart.dataset.audioEventBound = "true";
+            }
+
+            if (btnStop && !btnStop.dataset.audioEventBound) {
+                btnStop.addEventListener("click", function () {
+                    stopRecordingAudio(instanceId);
+                });
+
+                btnStop.dataset.audioEventBound = "true";
+            }
+
+            if (btnSave && !btnSave.dataset.audioEventBound) {
+                btnSave.addEventListener("click", function () {
+                    saveAudio(instanceId);
+                });
+
+                btnSave.dataset.audioEventBound = "true";
+            }
+
+            if (btnUpload && !btnUpload.dataset.audioEventBound) {
+                btnUpload.addEventListener("click", function () {
+                    uploadAudio(instanceId);
+                });
+
+                btnUpload.dataset.audioEventBound = "true";
+            }
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", bindAudioControlEvents);
+        } else {
+            bindAudioControlEvents();
+        }
+    })();
+</script>

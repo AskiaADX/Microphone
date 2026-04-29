@@ -1,38 +1,141 @@
-function showOverlay(instanceId){
-    removeClass(getElementByDynamicId("overlay_loader", instanceId),'hidden');
-}
+var audioRecorder;
 
-function hideOverlay(instanceId){
-    addClass(getElementByDynamicId("overlay_loader", instanceId),'hidden');
+/*
+* Helper: return a supported audio mime type for this browser
+*/
+function getSupportedAudioMimeType() {
+    if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) {
+        return "";
+    }
+
+    var mimeTypes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg;codecs=opus",
+        "audio/ogg"
+    ];
+
+    for (var i = 0; i < mimeTypes.length; i++) {
+        if (MediaRecorder.isTypeSupported(mimeTypes[i])) {
+            return mimeTypes[i];
+        }
+    }
+
+    return "";
 }
 
 /*
-* Upload the captured photo on the server
-* @param {Integer} instanceId ID of the current adc
+* Helper: map mime type to file extension
 */
-function uploadAudio(instanceId){
-	hideErrorMessage(instanceId);
-    hideSuccessMessage(instanceId);
+function getAudioFileExtension(blob) {
+    if (!blob || !blob.type) {
+        return "webm";
+    }
 
-    if (!uploadConfig(instanceId).apiKey || !uploadConfig(instanceId).secretKey) {
-		displayErrorMessage(uploadConfig(instanceId).ErrMsgInvalidApiSecretKeys, instanceId);
+    var mimeType = blob.type.toLowerCase();
+
+    if (mimeType.indexOf("webm") > -1) {
+        return "webm";
+    }
+    if (mimeType.indexOf("mp4") > -1 || mimeType.indexOf("aac") > -1 || mimeType.indexOf("mpeg") > -1) {
+        return "mp4";
+    }
+    if (mimeType.indexOf("ogg") > -1) {
+        return "ogg";
+    }
+    if (mimeType.indexOf("wav") > -1) {
+        return "wav";
+    }
+
+    return "webm";
+}
+
+/*
+* Helper: return a filename for the current audio blob
+*/
+function getAudioFileName(blob, baseName) {
+    return (baseName || "my_audio") + "." + getAudioFileExtension(blob);
+}
+
+/*
+* Helper: safely set srcObject for media elements
+*/
+function setSrcObject(stream, element) {
+    if ("srcObject" in element) {
+        element.srcObject = stream;
+    } else {
+        element.src = window.URL.createObjectURL(stream);
+    }
+}
+
+/*
+* Helper: safely clear live stream / source from player
+*/
+function clearPlayerSource(player) {
+    try {
+        player.pause();
+    } catch (e) {}
+
+    if ("srcObject" in player && player.srcObject) {
+        player.srcObject = null;
+    }
+
+    player.removeAttribute("src");
+
+    try {
+        player.load();
+    } catch (e) {}
+}
+
+/*
+* Helper: stop all tracks on a stream
+*/
+function stopStreamTracks(stream) {
+    if (!stream || !stream.getTracks) {
         return;
     }
 
-    if(audioRecorder != undefined){ // if audio has been recorded
-        var audioBlob;
-        audioBlob = audioRecorder.blob;
-        if(validFileSize(instanceId, audioBlob)){
+    var tracks = stream.getTracks();
+    for (var i = 0; i < tracks.length; i++) {
+        try {
+            tracks[i].stop();
+        } catch (e) {}
+    }
+}
+
+function showOverlay(instanceId){
+    removeClass(getElementByDynamicId("overlay_loader", instanceId), 'hidden');
+}
+
+function hideOverlay(instanceId){
+    addClass(getElementByDynamicId("overlay_loader", instanceId), 'hidden');
+}
+
+/*
+* Upload the captured audio on the server
+* @param {Integer} instanceId ID of the current adc
+*/
+function uploadAudio(instanceId){
+    hideErrorMessage(instanceId);
+    hideSuccessMessage(instanceId);
+
+    if (!uploadConfig(instanceId).apiKey || !uploadConfig(instanceId).secretKey) {
+        displayErrorMessage(uploadConfig(instanceId).ErrMsgInvalidApiSecretKeys, instanceId);
+        return;
+    }
+
+    if (audioRecorder != undefined && audioRecorder.blob) {
+        var audioBlob = audioRecorder.blob;
+        if (validFileSize(instanceId, audioBlob)) {
             generateNewToken(function(token){
-                uploadConfig(instanceId).token=token;
+                uploadConfig(instanceId).token = token;
                 sendFileTransferCall(instanceId, audioBlob);
             }, instanceId);
-        }
-        else{
+        } else {
             displayErrorMessage(uploadConfig(instanceId).ErrMsgFileSizeExceeded, instanceId);
         }
-    }
-    else{
+    } else {
         displayErrorMessage(uploadConfig(instanceId).ErrMsgSelectFile, instanceId);
     }
 }
@@ -45,6 +148,7 @@ function uploadAudio(instanceId){
 function validFileSize(instanceId, fileData){
     var filesize = 0;
     var maxsize = uploadConfig(instanceId).maxfilesize;
+
     if (fileData) {
         filesize = fileData.size / 1024;
     }
@@ -61,7 +165,6 @@ function validFileSize(instanceId, fileData){
 * @param {Integer} instanceId ID of the current adc
 */
 function generateNewToken(callback, instanceId) {
-
     var data = {
         ApiKey: uploadConfig(instanceId).apiKey,
         SecretKey: uploadConfig(instanceId).secretKey
@@ -72,33 +175,32 @@ function generateNewToken(callback, instanceId) {
     var generateTokenSuccess = function (token) {
         callback(token);
     };
-    var generateTokenError = function (error) {
+
+    var generateTokenError = function () {
         hideOverlay(instanceId);
         displayErrorMessage(uploadConfig(instanceId).ErrMsgInvalidApiSecretKeys, instanceId);
     };
-    var generateTokenBeforeSend=function(){
+
+    var generateTokenBeforeSend = function(){
         showOverlay(instanceId);
     };
 
-    sendAjaxPostCall(url, data, true, generateTokenSuccess, generateTokenError,generateTokenBeforeSend);
-
+    sendAjaxPostCall(url, data, true, generateTokenSuccess, generateTokenError, generateTokenBeforeSend);
 }
 
 /*
 * Generates right url, success and error callbacks and transfers it to sendAjaxPostCall function
 * @param {Integer} instanceId ID of the current adc
 * @param {Data} fileData Data from the current file
-* @param {String} type Type of file (video or photo)
 */
 function sendFileTransferCall(instanceId, fileData) {
-    if(!uploadConfig(instanceId).token){
+    if (!uploadConfig(instanceId).token) {
         displayErrorMessage(uploadConfig(instanceId).ErrMsgToken, instanceId);
         return;
     }
 
     var projectName = uploadConfig(instanceId).ausProjectName;
-    //var fileData = getElementByDynamicId("adc_uploader", instanceId).files[0];
-    var fileDataName = "file-name.mpeg";
+    var fileDataName = getAudioFileName(fileData, "file-name");
     var shortcut = uploadConfig(instanceId).shortcut;
     var seed = uploadConfig(instanceId).seedvalue;
     var guid = uploadConfig(instanceId).guidstring;
@@ -107,32 +209,37 @@ function sendFileTransferCall(instanceId, fileData) {
     if (guid.charAt(0) == "{") guid = guid.substr(1);
     if (guid.charAt(guid.length - 1) == "}") guid = guid.substr(0, guid.length - 1);
 
-    var url=uploadConfig(instanceId).uploadUrl + "?tokenkey=" + uploadConfig(instanceId).token + "&filename=" + fileDataName
-    + "&projectname=" + projectName + "&shortcut=" + shortcut + "&seed=" + seed + "&guid=" + guid;
+    var url = uploadConfig(instanceId).uploadUrl +
+        "?tokenkey=" + encodeURIComponent(uploadConfig(instanceId).token) +
+        "&filename=" + encodeURIComponent(fileDataName) +
+        "&projectname=" + encodeURIComponent(projectName) +
+        "&shortcut=" + encodeURIComponent(shortcut) +
+        "&seed=" + encodeURIComponent(seed) +
+        "&guid=" + encodeURIComponent(guid);
 
     var uploadSuccessCallback = function (response) {
-        getElementByDynamicId("HidResult", instanceId).value=response.DestinationFileName;
+        getElementByDynamicId("HidResult", instanceId).value = response.DestinationFileName;
         displaySuccessMessage(uploadConfig(instanceId).SuccessMsgUpload, uploadConfig(instanceId).SuccessMsgColor, instanceId);
         hideOverlay(instanceId);
+
         if (uploadConfig(instanceId).disabledUploadBtn == 1) {
-	    	disableUploadBtn(instanceId);
+            disableUploadBtn(instanceId);
         }
+
         if (uploadConfig(instanceId).AutoSubmitAfterUpload == 1) {
             document.getElementsByTagName("form")[0].submit();
-        } else {
-            if (uploadConfig(instanceId).EnabledNextAfterUpload == 1) {
-                document.getElementsByName("Next")[0].hidden = false;
-            }
+        } else if (uploadConfig(instanceId).EnabledNextAfterUpload == 1) {
+            document.getElementsByName("Next")[0].hidden = false;
         }
     };
-    var uploadErrorCallback = function (error) {
-        getElementByDynamicId("HidResult", instanceId).value='';
+
+    var uploadErrorCallback = function () {
+        getElementByDynamicId("HidResult", instanceId).value = '';
         displayErrorMessage(uploadConfig(instanceId).ErrMsgErrorAtUpload, instanceId);
         hideOverlay(instanceId);
     };
 
     sendAjaxPostCall(url, fileData, false, uploadSuccessCallback, uploadErrorCallback);
-
 }
 
 /*
@@ -144,9 +251,10 @@ function sendFileTransferCall(instanceId, fileData) {
 * @param {Function} errorCallback Function to execute after unsuccessful request
 * @param {Function} beforeSend Function to execute before sending request (optional)
 */
-function sendAjaxPostCall(url, data, isJsonRequest, successCallback, errorCallback,beforeSend) {
+function sendAjaxPostCall(url, data, isJsonRequest, successCallback, errorCallback, beforeSend) {
     var http = new XMLHttpRequest();
     http.open("POST", url, true);
+
     if (isJsonRequest) {
         http.setRequestHeader("Content-type", "application/json");
         data = JSON.stringify(data);
@@ -154,18 +262,26 @@ function sendAjaxPostCall(url, data, isJsonRequest, successCallback, errorCallba
 
     http.onreadystatechange = function () {
         if (http.readyState == 4) {
+            var response = null;
+
+            try {
+                response = JSON.parse(http.responseText);
+            } catch (e) {
+                response = http.responseText;
+            }
+
             if (http.status == 200) {
-                var response = JSON.parse(http.responseText);
                 successCallback(response);
             } else {
-                var response = JSON.parse(http.responseText);
                 errorCallback(response);
             }
         }
-    }
-    if(beforeSend){
+    };
+
+    if (beforeSend) {
         beforeSend();
     }
+
     http.send(data);
 }
 
@@ -174,8 +290,8 @@ function sendAjaxPostCall(url, data, isJsonRequest, successCallback, errorCallba
 * @param {HTMLElement} ele Element from the HTML
 * @param {String} cls A class
 */
-function hasClass(ele,cls) {
-    return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
+function hasClass(ele, cls) {
+    return ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
 }
 
 /*
@@ -183,10 +299,10 @@ function hasClass(ele,cls) {
 * @param {HTML Element} ele Element from the HTML
 * @param {String} cls A class
 */
-function removeClass(ele,cls) {
-    if (hasClass(ele,cls)) {
-        var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
-        ele.className=ele.className.replace(reg,' ');
+function removeClass(ele, cls) {
+    if (hasClass(ele, cls)) {
+        var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');
+        ele.className = ele.className.replace(reg, ' ');
     }
 }
 
@@ -195,24 +311,26 @@ function removeClass(ele,cls) {
 * @param {HTML Element} ele Element from the HTML
 * @param {String} cls A class
 */
-function addClass(ele,cls) {
-    if (!hasClass(ele,cls)) {
-        ele.className += ' '+ cls;
+function addClass(ele, cls) {
+    if (!hasClass(ele, cls)) {
+        ele.className += ' ' + cls;
     }
 }
 
 /*
 * Displays an error message
 * @param {String} message The message to display
-* @parem {Integer} instanceId ID of the current adc
+* @param {Integer} instanceId ID of the current adc
 */
 function displayErrorMessage(message, instanceId){
     hideOverlay(instanceId);
     var div = getElementByDynamicId("adc-errdiv", instanceId);
     addClass(div, "askia-errors-summary");
     div.style.marginBottom = "50px";
+
     var ul = getElementByDynamicId("ulErrorMessages", instanceId);
     ul.innerHTML = "";
+
     var li = document.createElement("li");
     li.appendChild(document.createTextNode(message));
     ul.appendChild(li);
@@ -227,13 +345,14 @@ function displayErrorMessage(message, instanceId){
 function displaySuccessMessage(message, colorcode, instanceId){
     hideOverlay(instanceId);
     var div = getElementByDynamicId("adc-succdiv", instanceId);
-    div.style.backgroundColor= 'rgb(' + colorcode + ')';
+    div.style.backgroundColor = 'rgb(' + colorcode + ')';
     div.style.color = 'white';
     div.style.width = '100%';
     div.style.paddingTop = '15px';
     div.style.paddingBottom = '15px';
     div.style.marginBottom = '50px';
     div.style.borderRadius = '3px';
+
     var span = getElementByDynamicId("spanSuccessMessage", instanceId);
     span.innerHTML = message;
 }
@@ -244,14 +363,16 @@ function displaySuccessMessage(message, colorcode, instanceId){
 */
 function disableUploadBtn(instanceId) {
     var btn = getElementByDynamicId("btnUpload", instanceId);
+
     if (btn.hasAttribute("disabled")) {
-        btn.setAttribute("disabled","disabled");
+        btn.setAttribute("disabled", "disabled");
     } else {
         var att = document.createAttribute("disabled");
         att.value = "disabled";
         btn.setAttributeNode(att);
     }
-    addClass(btn,"disabled");
+
+    addClass(btn, "disabled");
     btn.style.cursor = "not-allowed";
 }
 
@@ -261,10 +382,12 @@ function disableUploadBtn(instanceId) {
 */
 function enableUploadBtn(instanceId) {
     var btn = getElementByDynamicId("btnUpload", instanceId);
+
     if (btn.hasAttribute("disabled")) {
         btn.removeAttribute("disabled");
     }
-    removeClass(btn,"disabled");
+
+    removeClass(btn, "disabled");
     btn.style.cursor = "pointer";
 }
 
@@ -275,6 +398,7 @@ function enableUploadBtn(instanceId) {
 function hideSuccessMessage(instanceId) {
     var div = getElementByDynamicId("adc-succdiv", instanceId);
     div.removeAttribute("style");
+
     var span = getElementByDynamicId("spanSuccessMessage", instanceId);
     span.innerHTML = "";
 }
@@ -287,6 +411,7 @@ function hideErrorMessage(instanceId){
     var div = getElementByDynamicId("adc-errdiv", instanceId);
     removeClass(div, "askia-errors-summary");
     div.removeAttribute("style");
+
     var ul = getElementByDynamicId("ulErrorMessages", instanceId);
     ul.innerHTML = "";
 }
@@ -304,7 +429,7 @@ function getElementByDynamicId(elementId, instanceId) {
 * @param {Integer} instanceId ID of the current adc
 */
 function uploadConfig(instanceId) {
-	return eval('uploadConfig_' + instanceId);
+    return eval('uploadConfig_' + instanceId);
 }
 
 /*
@@ -318,74 +443,145 @@ function activateBtnUpload(instanceId) {
 }
 
 /*
-* Start the record of audio, displays the stream on screen, storing the stream in audioRecorder variable
+* Start the recording of audio
 * @param {Integer} instanceId ID of the current adc
 */
 function startRecordingAudio(instanceId) {
-    document.getElementById('btn-start-recording').disabled = true;
-    var player = document.getElementById('player');
+    hideErrorMessage(instanceId);
+    hideSuccessMessage(instanceId);
+
+    var startBtn = getElementByDynamicId("btn-start-recording", instanceId);
+    var stopBtn = getElementByDynamicId("btn-stop-recording", instanceId);
+    var player = getElementByDynamicId("player", instanceId);
+    var btnSave = getElementByDynamicId("btnSave", instanceId);
+
+    startBtn.disabled = true;
+    stopBtn.disabled = true;
+
     if (uploadConfig(instanceId).allowUploadFileChange == 1) {
         enableUploadBtn(instanceId);
     }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        displayErrorMessage(uploadConfig(instanceId).ErrMsgUserMediaAccess, instanceId);
+        startBtn.disabled = false;
+        return;
+    }
+
     navigator.mediaDevices.getUserMedia({
         audio: true,
         video: false
     }).then(function(stream) {
+        clearPlayerSource(player);
         setSrcObject(stream, player);
-        if (!navigator.userAgent.toUpperCase().includes("IPAD")) {
-                player.play();
-                player.muted = true;
-            audioRecorder = new RecordRTCPromisesHandler(stream, {
-                mimeType: 'audio/mpeg',
-                type: 'audio',
-                audioBitsPerSecond: 128000
-            });
-            audioRecorder.startRecording().then(function() {
-                console.info('Recording audio ...');
-            }).catch(function(error) {
-                displayErrorMessage(uploadConfig(instanceId).ErrMsgStartRec, instanceId);
-                console.error('Cannot start audio recording: ', error);
-            });
-            audioRecorder.stream = stream;
+        player.muted = true;
+
+        var recorderOptions = {
+            type: "audio",
+            audioBitsPerSecond: 128000
+        };
+
+        var supportedMimeType = getSupportedAudioMimeType();
+        if (supportedMimeType) {
+            recorderOptions.mimeType = supportedMimeType;
         }
-        document.getElementById('btn-stop-recording').disabled = false;
-    }).catch(function(error) {
-        displayErrorMessage(uploadConfig(instanceId).ErrMsgUserMediaAccess, instanceId);
-        console.error("Cannot access media devices: ", error);
-    });
-    removeClass(document.getElementById("label-start"), "primary");
-    addClass(document.getElementById("label-stop"), "primary");
+
+        audioRecorder = new RecordRTCPromisesHandler(stream, recorderOptions);
+        audioRecorder.stream = stream;
+
+        var playPromise;
+        try {
+            playPromise = player.play();
+        } catch (e) {}
+
+        if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(function() {
+                // ignore autoplay failures for live preview
+            });
+        }
+
+        return audioRecorder.startRecording();
+    }).then(function() {
+        console.info("Recording audio ...");
+        stopBtn.disabled = false;
+        }).catch(function(error) {
+            var debugMsg = "START FAILED\n";
+
+            debugMsg += "Error: " + (error && error.message ? error.message : error) + "\n";
+
+            debugMsg += "MediaRecorder: " + (typeof MediaRecorder !== "undefined") + "\n";
+
+            if (typeof MediaRecorder !== "undefined") {
+                debugMsg += "webm: " + MediaRecorder.isTypeSupported("audio/webm;codecs=opus") + "\n";
+                debugMsg += "webm(no codec): " + MediaRecorder.isTypeSupported("audio/webm") + "\n";
+                debugMsg += "mp4: " + MediaRecorder.isTypeSupported("audio/mp4") + "\n";
+                debugMsg += "ogg: " + MediaRecorder.isTypeSupported("audio/ogg") + "\n";
+            }
+
+            // SHOW IT DIRECTLY IN THE UI
+            displayErrorMessage(debugMsg, instanceId);
+
+            console.error("Cannot start audio recording:", error);
+        });
+
     removeClass(player, "saved");
-    var btnSave = getElementByDynamicId("btnSave",instanceId);
-    if(btnSave){
+
+    if (btnSave) {
         btnSave.disabled = false;
     }
-  }
+}
 
 /*
-* Stop the audio recording, diplays the recorded audio on screen and stores the audio in audioRecorder variable
+* Stop the audio recording, display the recorded audio, and free the stream
 * @param {Integer} instanceId ID of the current adc
 */
 function stopRecordingAudio(instanceId) {
-    removeClass(document.getElementById("label-stop"), "primary");
-    addClass(document.getElementById("label-start"), "primary");
-    document.getElementById('btn-stop-recording').disabled = true;
-    var player = document.getElementById('player');
-    audioRecorder.stopRecording().then(function() {
-        console.info('stopRecording success');
+    var startBtn = getElementByDynamicId("btn-start-recording", instanceId);
+    var stopBtn = getElementByDynamicId("btn-stop-recording", instanceId);
+    var player = getElementByDynamicId("player", instanceId);
 
-        // Now RecordRTCPromisesHandler function returns a promise with a blob as the promise value.
-        player.src = URL.createObjectURL(audioRecorder.blob);
+    stopBtn.disabled = true;
 
-        if (!navigator.userAgent.toUpperCase().includes("IPAD")) {
-            player.play();
-            player.muted = false;
-        }
-        audioRecorder.stream.stop();
-        document.getElementById('btn-start-recording').disabled = false;
-    }).catch(function(error) {
+    if (!audioRecorder) {
         displayErrorMessage(uploadConfig(instanceId).ErrMsgStopRec, instanceId);
+        startBtn.disabled = false;
+        return;
+    }
+
+    audioRecorder.stopRecording().then(function() {
+        console.info("stopRecording success");
+
+        clearPlayerSource(player);
+
+        if (!audioRecorder.blob) {
+            throw "Empty blob.";
+        }
+
+        player.src = URL.createObjectURL(audioRecorder.blob);
+        player.muted = false;
+
+        try {
+            player.load();
+        } catch (e) {}
+
+        var playPromise;
+        try {
+            playPromise = player.play();
+        } catch (e) {}
+
+        if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(function() {
+                // ignore autoplay failures on playback
+            });
+        }
+
+        stopStreamTracks(audioRecorder.stream);
+        startBtn.disabled = false;
+    }).catch(function(error) {
         console.log("Stop recording error:", error);
+        stopStreamTracks(audioRecorder && audioRecorder.stream ? audioRecorder.stream : null);
+        startBtn.disabled = false;
+        displayErrorMessage(uploadConfig(instanceId).ErrMsgStopRec, instanceId);
     });
 }
 
@@ -396,26 +592,42 @@ function stopRecordingAudio(instanceId) {
 function saveAudio(instanceId) {
     hideErrorMessage(instanceId);
     hideSuccessMessage(instanceId);
-    var player = document.getElementById("player");
+
+    var player = getElementByDynamicId("player", instanceId);
+
     if (!hasClass(player, "saved")) {
-        if(audioRecorder != undefined){ // if audio has been recorded
-            if (window.navigator.msSaveOrOpenBlob) { // Edge
-               window.navigator.msSaveOrOpenBlob(audioRecorder.blob, "my_audio.mpeg");
-            } else { // Others
+        if (audioRecorder != undefined && audioRecorder.blob) {
+            var fileName = getAudioFileName(audioRecorder.blob, "my_audio");
+
+            if (window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(audioRecorder.blob, fileName);
+            } else {
                 var a = document.createElement("a");
-                a.href = player.src;
-                a.download = "my_audio.mpeg";
+                var objectUrl = player.src;
+
+                if (!objectUrl) {
+                    objectUrl = URL.createObjectURL(audioRecorder.blob);
+                }
+
+                a.href = objectUrl;
+                a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
+
                 setTimeout(function() {
                     document.body.removeChild(a);
-                    window.URL.revokeObjectURL(player.src);
                 }, 0);
             }
+
             addClass(player, "saved");
-            getElementByDynamicId("btnSave", instanceId).disabled = true;
+
+            var saveBtn = getElementByDynamicId("btnSave", instanceId);
+            if (saveBtn) {
+                saveBtn.disabled = true;
+            }
+
             displaySuccessMessage(uploadConfig(instanceId).SuccessMsgSave, uploadConfig(instanceId).SuccessMsgColor, instanceId);
-        } else{
+        } else {
             displayErrorMessage(uploadConfig(instanceId).ErrMsgSave, instanceId);
         }
     }
